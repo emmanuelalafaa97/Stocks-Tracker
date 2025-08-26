@@ -139,3 +139,22 @@ for ticker in company_sector.keys():
     download_and_append_data(ticker, start_date=download_start_date)
 
 print("\nAutomation script finished.")
+
+#Checking and cleaning the data
+# Create a copy of the DataFrame to avoid modifying the original
+cleaned_automated_data = pd.read_csv("/content/drive/MyDrive/Stocks Project folder/output_csv_file.csv")
+
+# Remove the first row (index 0) which contains the Ticker information
+cleaned_automated_data = cleaned_automated_data.iloc[1:].copy()
+
+# Rename the 'Price' column to 'Date'
+cleaned_automated_data = cleaned_automated_data.rename(columns={'Price': 'Date'})
+
+#save the cleaned data
+cleaned_automated_data.to_csv("/content/drive/MyDrive/Stocks Project folder/Cleaned_companies_daily_data_automated.csv", index=False)
+
+# Display the first few rows of the cleaned DataFrame to verify the changes
+print(cleaned_automated_data.head())
+
+# Display the last few rows of the cleaned DataFrame to verify the changes
+print(cleaned_automated_data.tail())
