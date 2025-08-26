@@ -117,8 +117,10 @@ def download_and_append_data(ticker, start_date=None):
             }
             data['Company name'] = company_names.get(ticker, 'Unknown')
 
-            # Append data to the CSV
-            data.to_csv("/content/drive/MyDrive/Stocks Project folder/output_csv_file",  mode='a', header=not os.path.exists("/content/drive/MyDrive/Stocks Project folder/output_csv_file"))
+            # Append data to the CSV or rather google sheet
+            output_path = "/content/drive/MyDrive/Stocks Project folder/output_csv_file.csv"
+            data.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
+            #data.to_csv("/content/drive/MyDrive/Stocks Project folder/output_csv_file",  mode='a', header=not os.path.exists("/content/drive/MyDrive/Stocks Project folder/output_csv_file"))
             print(f"Successfully downloaded and appended data for {ticker}")
         else:
             print(f"No new data found for {ticker} with start date {start_date}")
