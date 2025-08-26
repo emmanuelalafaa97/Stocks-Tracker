@@ -27,4 +27,4 @@ jobs:
           GOOGLE_SHEETS_CRED: ${{ secrets.GOOGLE_SHEETS_CRED }}
         run: |
           echo "$GOOGLE_SHEETS_CRED" > cred.json
-          python update_data.py cred.json
+          python Stocks-Updated-Scripts.py cred.json

@@ -1,3 +1,18 @@
+import sys
+import gspread
+from google.oauth2.service_account import Credentials
+
+cred_file = sys.argv[1]  # e.g. "cred.json"
+
+scopes = ["https://www.googleapis.com/auth/spreadsheets",
+          "https://www.googleapis.com/auth/drive"]
+
+creds = Credentials.from_service_account_file(cred_file, scopes=scopes)
+client = gspread.authorize(creds)
+
+# now your normal code...
+
+
 import yfinance as yf
 import pandas as pd
 import os
