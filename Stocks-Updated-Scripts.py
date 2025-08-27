@@ -133,8 +133,12 @@ def download_and_append_data(ticker, start_date=None):
             data['Company name'] = company_names.get(ticker, 'Unknown')
 
             # Append data to the CSV or rather google sheet
-            output_path = "/content/drive/MyDrive/Stocks Project folder/output_csv_file.csv"
-            data.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
+            output_dir = "data"
+            os.makedirs(output_dir, exist_ok=True)
+            output_path = os.path.join(output_dir, "output_csv_file.csv")
+
+            #output_path = "/content/drive/MyDrive/Stocks Project folder/output_csv_file.csv"
+            #data.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
             #data.to_csv("/content/drive/MyDrive/Stocks Project folder/output_csv_file",  mode='a', header=not os.path.exists("/content/drive/MyDrive/Stocks Project folder/output_csv_file"))
             print(f"Successfully downloaded and appended data for {ticker}")
         else:
@@ -157,7 +161,10 @@ print("\nAutomation script finished.")
 
 #Checking and cleaning the data
 # Create a copy of the DataFrame to avoid modifying the original
-cleaned_automated_data = pd.read_csv("/content/drive/MyDrive/Stocks Project folder/output_csv_file.csv")
+cleaned_automated_data = pd.read_csv(output_path)
+cleaned_automated_data.to_csv(os.path.join(output_dir, "Cleaned_companies_daily_data_automated.csv"), index=False)
+
+#cleaned_automated_data = pd.read_csv("/content/drive/MyDrive/Stocks Project folder/output_csv_file.csv")
 
 # Remove the first row (index 0) which contains the Ticker information
 cleaned_automated_data = cleaned_automated_data.iloc[1:].copy()
