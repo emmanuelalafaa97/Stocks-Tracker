@@ -213,17 +213,17 @@ def save_to_gspread(cl_data :pd.DataFrame):
      """
        Saving to gspread sheet
      """
-     cleaned_automated_data = cl_data.copy()
-     print(cleaned_automated_data.info())
+     df = cl_data.copy()
+     print(df.info())
      # Ensure 'Date' column is datetime type before formatting
      # This step is added to address the AttributeError if the column type was lost.
-     cleaned_automated_data['Date'] = pd.to_datetime(cleaned_automated_data['Date'], errors='coerce', format='mixed')
+     df['Date'] = pd.to_datetime(df['Date'], errors='coerce', format='mixed')
 
      # Convert 'Date' column to string format for gspread compatibility
-     cleaned_automated_data['Date'] = cleaned_automated_data['Date'].dt.strftime('%Y-%m-%d')
+     df['Date'] = df_data['Date'].dt.strftime('%Y-%m-%d')
 
      # Convert DataFrame to a list of lists, including headers
-     data_to_upload = [cleaned_automated_data.columns.values.tolist()] + cleaned_automated_data.values.tolist()
+     data_to_upload = [df.columns.values.tolist()] + df.values.tolist()
 
      # Clear existing content and then update the sheet
      worksheet.clear()
@@ -232,7 +232,7 @@ def save_to_gspread(cl_data :pd.DataFrame):
      print("Data successfully uploaded to Google Sheet.")
     
     
-clean_data("data/output_csv_file.csv")
+cleaned_auto_data = clean_data("data/output_csv_file.csv")
  
 #run the file command to save the file in google sheet
-save_to_gspread(cleaned_automated_data)
+save_to_gspread(cleaned_auto_data)
