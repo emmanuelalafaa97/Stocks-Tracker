@@ -9,6 +9,7 @@ import yfinance as yf
 import os
 from pathlib import Path
 import sys
+import numpy as np
 import traceback
 
 
