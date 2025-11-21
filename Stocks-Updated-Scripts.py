@@ -207,32 +207,21 @@ def clean_data(info : csv):
      print(cleaned_automated_data.tail())
      return cleaned_automated_data
 
-   
-#saving to gspreadsheet
-def save_to_gspread(cl_data :pd.DataFrame):
-     """
-       Saving to gspread sheet
-     """
-     df = cl_data.copy()
-     print(df.info())
-     # Ensure 'Date' column is datetime type before formatting
-     # This step is added to address the AttributeError if the column type was lost.
-     df['Date'] = pd.to_datetime(df['Date'], errors='coerce', format='mixed')
-
-     # Convert 'Date' column to string format for gspread compatibility
-     df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
-
-     # Convert DataFrame to a list of lists, including headers
-     data_to_upload = [df.columns.values.tolist()] + df.values.tolist()
-
-     # Clear existing content and then update the sheet
-     worksheet.clear()
-     worksheet.update(values=data_to_upload, range_name='A1')
-
-     print("Data successfully uploaded to Google Sheet.")
-    
     
 cleaned_auto_data = clean_data("data/output_csv_file.csv")
  
-#run the file command to save the file in google sheet
-save_to_gspread(cleaned_auto_data)
+# Ensure 'Date' column is datetime type before formatting
+# This step is added to address the AttributeError if the column type was lost.
+cleaned_auto_data['Date'] = pd.to_datetime(cleaned_auto_data['Date'], errors='coerce', format='mixed')
+
+# Convert 'Date' column to string format for gspread compatibility
+cleaned_auto_data['Date'] = cleaned_auto_data['Date'].dt.strftime('%Y-%m-%d')
+
+# Convert DataFrame to a list of lists, including headers
+data_to_upload = [cleaned_auto_data.columns.values.tolist()] + cleaned_auto_data.values.tolist()
+
+# Clear existing content and then update the sheet
+worksheet.clear()
+worksheet.update(values=data_to_upload, range_name='A1')
+
+print("Data successfully uploaded to Google Sheet.")
