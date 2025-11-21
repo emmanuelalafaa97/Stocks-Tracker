@@ -208,16 +208,22 @@ def process_and_upload_data(csv_path: str):
     cleaned_automated_data['Date'] = pd.to_datetime(cleaned_automated_data['Date'], errors='coerce', format='mixed')
     cleaned_automated_data['Date'] = cleaned_automated_data['Date'].dt.strftime('%Y-%m-%d')
 
+    print("changed date type:', clean_automated_data.shape)
+    print(clean_automated_data.info())
     # Process numeric columns: convert to numeric, handle inf/nan.
     numeric_cols = ['Close', 'High', 'Low', 'Open', 'Volume']
-    for col in numeric_cols:
-        cleaned_automated_data[col] = pd.to_numeric(cleaned_automated_data[col], errors='coerce')
-        # Replace inf and -inf with NaN.
-        cleaned_automated_data[col] = cleaned_automated_data[col].replace([np.inf, -np.inf], np.nan)
-        # For gspread, replace NaN with empty string.
-        cleaned_automated_data[col] = cleaned_automated_data[col].fillna('')
+      for col in numeric_cols:
+        try:
+          cleaned_automated_data[col] = pd.to_numeric(cleaned_automated_data[col], errors='coerce')
+          # Replace inf and -inf with NaN.
+          cleaned_automated_data[col] = cleaned_automated_data[col].replace([np.inf, -np.inf], np.nan)
+          # For gspread, replace NaN with empty string.
+          cleaned_automated_data[col] = cleaned_automated_data[col].fillna('')
+        except Exception as e:
+          print(f"\nERROR during processing of column '{col}': {e}")
+          print("Traceback:", traceback.format_exc())
 
-    # CRITICAL: Convert ALL data in the DataFrame to string representation
+    # Convert ALL data in the DataFrame to string representation
     # This ensures that no non-JSON-compliant types are passed to gspread.
     cleaned_automated_data = cleaned_automated_data.astype(str)
 
