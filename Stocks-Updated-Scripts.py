@@ -222,6 +222,19 @@ def save_to_gspread(cl_data :pd.DataFrame):
      # Convert 'Date' column to string format for gspread compatibility
      df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
 
+      # 2. Process numeric columns: convert to numeric, handle inf/nan.
+     numeric_cols = ['Close', 'High', 'Low', 'Open', 'Volume']
+     for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+        # Replace inf and -inf with NaN.
+        df[col] = df[col].replace([np.inf, -np.inf], np.nan)
+        # For gspread, replace NaN with empty string.
+        df[col] = df[col].fillna('')
+
+     # 3. CRITICAL: Convert ALL data in the DataFrame to string representation
+     # This ensures that no non-JSON-compliant types are passed to gspread.
+     df = df.astype(str)
+
      # Convert DataFrame to a list of lists, including headers
      data_to_upload = [df.columns.values.tolist()] + df.values.tolist()
 
