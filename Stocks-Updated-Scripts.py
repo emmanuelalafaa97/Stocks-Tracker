@@ -1,23 +1,32 @@
-import sys
-import gspread
-from google.oauth2.service_account import Credentials
-import yfinance as yf
+# -*- coding: utf-8 -*-
+
+
+import gspread      #note gspread  and the google.oauth2.service account to get credentials
 import pandas as pd
+from google.oauth2.service_account import Credentials
+import csv
+import yfinance as yf
 import os
+from pathlib import Path
 
-# === Google Sheets Auth ===
-cred_file = sys.argv[1]  # e.g. "cred.json"
-scopes =  ["https://www.googleapis.com/auth/spreadsheets",
-          "https://www.googleapis.com/auth/drive"]
 
-creds = Credentials.from_service_account_file(cred_file, scopes=scopes)
+
+
+SCOPES = [
+"https://www.googleapis.com/auth/spreadsheets",
+"https://www.googleapis.com/auth/drive"
+]
+creds = Credentials.from_service_account_file(
+             sys.argv[1], scopes=SCOPES
+)
 client = gspread.authorize(creds)
+sheet = client.open("Cleaned_companies_daily_data_automated")
+worksheet = sheet.sheet1
 
-# === Open Google Sheet ===
-spreadsheet = client.open("Cleaned_companies_daily_data_automated")   # 👈 replace with your sheet name
-worksheet = spreadsheet.sheet1             # first tab
 
-# === Company dictionaries (company_sector and company_names) ===
+"""### First script"""
+
+
 # Define the dictionary of companies and their sectors
 company_sector = {
     "AAPL": "Technology",
@@ -35,51 +44,75 @@ company_sector = {
     "COP": "Energy",
     "SLB": "Energy",
     "BP": "Energy",
-    "PBR": "Petróleo Brasileiro S.A. - Petrobras",
-    "TTE": "TotalEnergies SE",
-    "SHEL": "Shell plc",
-    "CSUAY": "China Shenhua Energy Company Limited",
-    "E": "ENI S.p.A.",
-    "HSBC": "HSBC Holdings plc",
-    "JPM": "JPMorgan Chase & Co.",
-    "GS": "The Goldman Sachs Group, Inc.",
-    "BAC": "Bank of America Corporation",
-    "C": "Citigroup Inc.",
-    "WFC": "Wells Fargo & Company",
-    "MS": "Morgan Stanley",
-    "V": "Visa Inc.",
-    "MA": "Mastercard Incorporated",
-    "EA": "Electronic Arts Inc.",
-    "VOD": "Vodafone Group Public Limited Company",
-    "VZ": "Verizon Communications Inc.",
-    "SPOT": "Spotify Technology S.A.",
-    "NFLX": "Netflix, Inc.",
-    "TMUS": "T-Mobile US, Inc.",
-    "DIS": "The Walt Disney Company",
-    "T": "AT&T Inc.",
-    "CMCSA": "Comcast Corporation",
-    "NTDOY": "Nintendo Co., Ltd.",
-    "AMH": "American Homes 4 Rent",
-    "HNGKY": "Hongkong Land Holdings Limited",
-    "ESS": "Essex Property Trust, Inc.",
-    "SUI": "Sun Communities, Inc.",
-    "CNGKY": "CK Asset Holdings Limited",
-    "WARFY": "The Wharf (Holdings) Limited",
-    "BPYPP": "Brookfield Property Partners L.P.",
-    "EGP": "EastGroup Properties, Inc.",
-    "MAA-PI": "Mid-America Apartment Communities, Inc.",
-    "HST": "Host Hotels & Resorts, Inc.",
-    "JNJ": "Johnson & Johnson",
-    "UNH": "UnitedHealth Group Incorporated",
-    "AZN": "AstraZeneca PLC",
-    "MRK": "Merck & Co., Inc.",
-    "PFE": "Pfizer Inc.",
-    "SNY": "Sanofi",
-    "SMMNY": "Siemens Healthineers AG",
-    "CI": "The Cigna Group",
-    "BSX": "Boston Scientific Corporation",
-    "NVS": "Novartis AG"
+    "PBR": "Energy",
+    "TTE": "Energy",
+    "SHEL": "Energy",
+    "CSUAY": "Energy",
+    "E": "Energy",
+    "HSBC": "Financial Services",
+    "JPM": "Financial Services",
+    "GS": "Financial Services",
+    "BAC": "Financial Services",
+    "C": "Financial Services",
+    "WFC": "Financial Services",
+    "MS": "Financial Services",
+    "V": "Financial Services",
+    "MA": "Financial Services",
+    "EA": "Communication Services",
+    "VOD": "Communication Services",
+    "VZ": "Communication Services",
+    "SPOT": "Communication Services",
+    "NFLX": "Communication Services",
+    "TMUS": "Communication Services",
+    "DIS": "Communication Services",
+    "T": "Communication Services",
+    "CMCSA": "Communication Services",
+    "NTDOY": "Communication Services",
+    "AMH": "Real Estate",
+    "HNGKY": "Real Estate",
+    "ESS": "Real Estate",
+    "SUI": "Real Estate",
+    "CNGKY": "Real Estate",
+    "WARFY": "Real Estate",
+    "BPYPP": "Real Estate",
+    "EGP": "Real Estate",
+    "MAA-PI": "Real Estate",
+    "HST": "Real Estate",
+    "JNJ": "Healthcare",
+    "UNH": "Healthcare",
+    "AZN": "Healthcare",
+    "MRK": "Healthcare",
+    "PFE": "Healthcare",
+    "SNY": "Healthcare",
+    "SMMNY": "Healthcare",
+    "CI": "Healthcare",
+    "BSX": "Healthcare",
+    "NVS": "Healthcare"
 }
+
+# Define the output CSV file path
+output_csv_file = 'data/companies_daily_data_automated_first_script.csv'
+if not os.path.exists(output_csv_file):
+  try:
+    # Use 'x' mode: exclusive creation mode. Fails if the file exists.
+    with open(output_csv_file, 'x') as f:
+        print(f"File '{output_csv_file}' created successfully.")
+  except FileExistsError:
+    print(f"File '{output_csv_file}' already exists.")
+  except FileNotFoundError:
+    # This might occur if the directory path itself doesn't exist
+    print(f"Error: Directory not found for '{output_csv_file}'")
+
+# Get the latest date from the existing CSV if it exists
+latest_date = None
+if os.path.exists(output_csv_file):
+    try:
+        existing_df = pd.read_csv(output_csv_file)
+        existing_df['Date'] = pd.to_datetime(existing_df['Date'])
+        latest_date = existing_df['Date'].max()
+    except Exception as e:
+        print(f"Error reading existing CSV: {e}")
+        latest_date = None # Reset latest_date if there's an error reading the file
 
 # Function to download and append data for a given ticker
 def download_and_append_data(ticker, start_date=None):
@@ -118,81 +151,85 @@ def download_and_append_data(ticker, start_date=None):
                 "CI": "The Cigna Group", "BSX": "Boston Scientific Corporation", "NVS": "Novartis AG"
             }
             data['Company name'] = company_names.get(ticker, 'Unknown')
+
+            # Append data to the CSV
+            output_path = "data/output_csv_file"
+
+            data.to_csv("data/output_csv_file.csv",  mode='a', header=not os.path.exists("data/output_csv_file"))
+            print(f"Successfully downloaded and appended data for {ticker}")
+        else:
+            print(f"No new data found for {ticker} with start date {start_date}")
     except Exception as e:
         print(f"Error downloading data for {ticker}: {e}")
+    return data
 
+# Determine the start date for downloading
+download_start_date = None
+if latest_date:
+    download_start_date = (latest_date + pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+else:
+    download_start_date = '2010-01-01' # Start from the beginning if no existing file or error
 
-
-# === Download, clean, and upload data ===
-def download_clean_and_upload_data(ticker, start_date="2010-01-01"):
-    try:
-        # Download data
-        df = yf.download(ticker, start=start_date, end=pd.to_datetime("today").strftime("%Y-%m-%d"), interval="1d")
-        if df.empty:
-            print(f"⚠️ No data found for {ticker}")
-            return
-
-        # Add extra info
-        df["Company (Ticker)"] = ticker
-        df["Sector"] = company_sector.get(ticker, "Unknown")
-        company_names = {
-                "AAPL": "Apple Inc.", "AMZN": "Amazon Inc.", "BABA": "Alibaba Group Holding Limited",
-                "CRM": "Salesforce, Inc.", "META": "Meta Platforms, Inc.", "GOOG": "Alphabet Inc. (Class C)",
-                "INTC": "Intel Corporation", "MSFT": "Microsoft Corporation", "NVDA": "NVIDIA Corporation",
-                "TSLA": "Tesla, Inc.", "XOM": "Exxon Mobil Corporation", "CVX": "Chevron Corporation",
-                "COP": "ConocoPhillips", "SLB": "Schlumberger Limited", "BP": "BP p.l.c.",
-                "PBR": "Petróleo Brasileiro S.A. - Petrobras", "TTE": "TotalEnergies SE", "SHEL": "Shell plc",
-                "CSUAY": "China Shenhua Energy Company Limited", "E": "ENI S.p.A.",
-                "HSBC": "HSBC Holdings plc",
-                "JPM": "JPMorgan Chase & Co.", "GS": "The Goldman Sachs Group, Inc.",
-                "BAC": "Bank of America Corporation", "C": "Citigroup Inc.", "WFC": "Wells Fargo & Company",
-                "MS": "Morgan Stanley", "V": "Visa Inc.", "MA": "Mastercard Incorporated",
-                "EA": "Electronic Arts Inc.", "VOD": "Vodafone Group Public Limited Company",
-                "VZ": "Verizon Communications Inc.", "SPOT": "Spotify Technology S.A.", "NFLX": "Netflix, Inc.",
-                "TMUS": "T-Mobile US, Inc.", "DIS": "The Walt Disney Company", "T": "AT&T Inc.",
-                "CMCSA": "Comcast Corporation", "NTDOY": "Nintendo Co., Ltd.", "AMH": "American Homes 4 Rent",
-                "HNGKY": "Hongkong Land Holdings Limited", "ESS": "Essex Property Trust, Inc.",
-                "SUI": "Sun Communities, Inc.", "CNGKY": "CK Asset Holdings Limited",
-                "WARFY": "The Wharf (Holdings) Limited", "BPYPP": "Brookfield Property Partners L.P.",
-                "EGP": "EastGroup Properties, Inc.", "MAA-PI": "Mid-America Apartment Communities, Inc.",
-                "HST": "Host Hotels & Resorts, Inc.", "JNJ": "Johnson & Johnson",
-                "UNH": "UnitedHealth Group Incorporated", "AZN": "AstraZeneca PLC", "MRK": "Merck & Co., Inc.",
-                "PFE": "Pfizer Inc.", "SNY": "Sanofi", "SMMNY": "Siemens Healthineers AG",
-                "CI": "The Cigna Group", "BSX": "Boston Scientific Corporation", "NVS": "Novartis AG"
-            }
-        df["Company name"] = company_names.get(ticker, "Unknown")
-
-        # Reset index so Date becomes a column
-        df = df.reset_index()
-
-        # === Data Cleaning ===
-        # Remove first row if it contains ticker info (like in your example)
-        df = df.iloc[1:].copy() if len(df) > 1 else df
-
-        # Rename 'Close' column to 'Price' if needed
-        if 'Close' in df.columns:
-            df = df.rename(columns={'Close': 'Price'})
-
-        # Optional: reorder columns for clarity
-        columns_order = ["Date", "Company (Ticker)", "Company name", "Sector", "Open", "High", "Low", "Price", "Adj Close", "Volume"]
-        df = df[[col for col in columns_order if col in df.columns]]
-
-        # Save locally as cleaned CSV (optional)
-        output_dir = "./output_csv"
-        os.makedirs(output_dir, exist_ok=True)
-        cleaned_csv_path = os.path.join(output_dir, f"Cleaned_{ticker}_daily_data.csv")
-        df.to_csv(cleaned_csv_path, index=False)
-
-        # Convert to rows for gspread and upload
-        rows = [df.columns.tolist()] + df.values.tolist()
-        worksheet.append_rows(rows, value_input_option="USER_ENTERED")
-        print(f"✅ Uploaded cleaned {ticker} data to Google Sheet")
-
-    except Exception as e:
-        print(f"❌ Error with {ticker}: {e}")
-
-# Run for all tickers
+# Download and append data for all companies
 for ticker in company_sector.keys():
-    download_clean_and_upload_data(ticker)
+    download_and_append_data(ticker, start_date=download_start_date)
 
-print("\n🚀 Automation script finished. Cleaned data is in Google Sheets now.")
+print("\nAutomation script finished.")
+
+#check the data shape
+automated_data_test = pd.read_csv("data/output_csv_file.csv")
+print(automated_data_test.shape)
+
+### Clean the data
+def clean_data(info : csv):
+     """ 
+      Cleaning the data 
+     
+     """
+     # Create a copy of the DataFrame to avoid modifying the original
+     cleaned_automated_data = pd.read_csv(info)
+
+     # Remove the first row (index 0) which contains the Ticker information
+     cleaned_automated_data = cleaned_automated_data.iloc[1:].copy()
+
+     # Rename the 'Price' column to 'Date'
+     cleaned_automated_data = cleaned_automated_data.rename(columns={'Price': 'Date'})
+
+     #Remove duplicate (ticker, date) pairs from the combined file, keep the latest appended row
+     cleaned_automated_data = cleaned_automated_data.drop_duplicates(subset=['Company (Ticker)', 'Date'], keep='last').copy()
+
+     #save the cleaned data
+     cleaned_automated_data.to_csv("data/Cleaned_companies_daily_data_automated.csv", index=False)
+
+     # Display the first few rows of the cleaned DataFrame to verify the changes
+     print("Data Shape:", cleaned_automated_data.shape)
+     display(cleaned_automated_data.tail())
+     return cleaned_automated_data
+
+   
+ #saving to gspreadsheet
+ def saving_gspread(cl_data :pd.DataFrame):
+     """
+       Saving to gspread sheet
+     """
+     # Ensure 'Date' column is datetime type before formatting
+     # This step is added to address the AttributeError if the column type was lost.
+     cleaned_automated_data['Date'] = pd.to_datetime(cleaned_automated_data['Date'], errors='coerce', format='mixed')
+
+     # Convert 'Date' column to string format for gspread compatibility
+     cleaned_automated_data['Date'] = cleaned_automated_data['Date'].dt.strftime('%Y-%m-%d')
+
+     # Convert DataFrame to a list of lists, including headers
+     data_to_upload = [cleaned_automated_data.columns.values.tolist()] + cleaned_automated_data.values.tolist()
+
+     # Clear existing content and then update the sheet
+     worksheet.clear()
+     worksheet.update(values=data_to_upload, range_name='A1')
+
+     print("Data successfully uploaded to Google Sheet.")
+    
+    
+clean_data("data/output_csv_file.csv")
+ 
+#run the file command to save the file in google sheet
+save_to_gspread(cleaned_automated_data)
