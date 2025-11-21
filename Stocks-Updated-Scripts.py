@@ -204,7 +204,7 @@ def clean_data(info : csv):
 
      # Display the first few rows of the cleaned DataFrame to verify the changes
      print("Data Shape:", cleaned_automated_data.shape)
-     display(cleaned_automated_data.tail())
+     print(cleaned_automated_data.tail())
      return cleaned_automated_data
 
    
