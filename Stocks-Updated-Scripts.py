@@ -213,6 +213,8 @@ def save_to_gspread(cl_data :pd.DataFrame):
      """
        Saving to gspread sheet
      """
+     cleaned_automated_data = cl_data.copy()
+     print(cleaned_automated_data.info())
      # Ensure 'Date' column is datetime type before formatting
      # This step is added to address the AttributeError if the column type was lost.
      cleaned_automated_data['Date'] = pd.to_datetime(cleaned_automated_data['Date'], errors='coerce', format='mixed')
