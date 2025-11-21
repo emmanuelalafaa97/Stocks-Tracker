@@ -207,8 +207,8 @@ def clean_data(info : csv):
      return cleaned_automated_data
 
    
- #saving to gspreadsheet
- def saving_gspread(cl_data :pd.DataFrame):
+#saving to gspreadsheet
+def saving_gspread(cl_data :pd.DataFrame):
      """
        Saving to gspread sheet
      """
