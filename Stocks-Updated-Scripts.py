@@ -8,6 +8,7 @@ import csv
 import yfinance as yf
 import os
 from pathlib import Path
+import sys
 
 
 
