@@ -212,7 +212,7 @@ def process_and_upload_data(csv_path: str):
     print(clean_automated_data.info())
     # Process numeric columns: convert to numeric, handle inf/nan.
     numeric_cols = ['Close', 'High', 'Low', 'Open', 'Volume']
-      for col in numeric_cols:
+    for col in numeric_cols:
         try:
           cleaned_automated_data[col] = pd.to_numeric(cleaned_automated_data[col], errors='coerce')
           # Replace inf and -inf with NaN.
