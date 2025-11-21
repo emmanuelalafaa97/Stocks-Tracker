@@ -210,8 +210,8 @@ def process_and_upload_data(csv_path: str):
     cleaned_automated_data['Date'] = pd.to_datetime(cleaned_automated_data['Date'], errors='coerce', format='mixed')
     cleaned_automated_data['Date'] = cleaned_automated_data['Date'].dt.strftime('%Y-%m-%d')
 
-    print("changed date type:", clean_automated_data.shape)
-    print(clean_automated_data.info())
+    print("changed date type:", cleaned_automated_data.shape)
+    print(cleaned_automated_data.info())
     # Process numeric columns: convert to numeric, handle inf/nan.
     numeric_cols = ['Close', 'High', 'Low', 'Open', 'Volume']
     for col in numeric_cols:
