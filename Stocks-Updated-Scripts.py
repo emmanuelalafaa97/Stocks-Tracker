@@ -9,6 +9,7 @@ import yfinance as yf
 import os
 from pathlib import Path
 import sys
+import traceback
 
 
 
@@ -183,7 +184,8 @@ print(automated_data_test.shape)
 
 ### Clean the data
 def process_and_upload_data(csv_path: str):
-  # Create a copy of the DataFrame to avoid modifying the original
+  try :
+    # Create a copy of the DataFrame to avoid modifying the original
     cleaned_automated_data = pd.read_csv(csv_path)
 
     # Remove the first row (index 0) which contains the Ticker information
@@ -236,6 +238,9 @@ def process_and_upload_data(csv_path: str):
     worksheet.update(values=data_to_upload, range_name='A1')
 
     print("Data successfully uploaded to Google Sheet.")
+  except Exception as e:
+    print(f"\nERROR during initial data loading or cleaning steps: {e}")
+    print("Traceback:", traceback.format_exc())
 
 # Call the function to execute the process
 process_and_upload_data("data/output_csv_file.csv")
