@@ -209,7 +209,7 @@ def clean_data(info : csv):
 
    
 #saving to gspreadsheet
-def saving_gspread(cl_data :pd.DataFrame):
+def save_to_gspread(cl_data :pd.DataFrame):
      """
        Saving to gspread sheet
      """
