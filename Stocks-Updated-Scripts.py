@@ -220,7 +220,7 @@ def save_to_gspread(cl_data :pd.DataFrame):
      df['Date'] = pd.to_datetime(df['Date'], errors='coerce', format='mixed')
 
      # Convert 'Date' column to string format for gspread compatibility
-     df['Date'] = df_data['Date'].dt.strftime('%Y-%m-%d')
+     df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
 
      # Convert DataFrame to a list of lists, including headers
      data_to_upload = [df.columns.values.tolist()] + df.values.tolist()
