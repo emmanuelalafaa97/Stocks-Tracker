@@ -182,70 +182,54 @@ automated_data_test = pd.read_csv("data/output_csv_file.csv")
 print(automated_data_test.shape)
 
 ### Clean the data
-def clean_data(info : csv):
-     """ 
-      Cleaning the data 
-     
-     """
-     # Create a copy of the DataFrame to avoid modifying the original
-     cleaned_automated_data = pd.read_csv(info)
+def process_and_upload_data(csv_path: str):
+  # Create a copy of the DataFrame to avoid modifying the original
+    cleaned_automated_data = pd.read_csv(csv_path)
 
-     # Remove the first row (index 0) which contains the Ticker information
-     cleaned_automated_data = cleaned_automated_data.iloc[1:].copy()
+    # Remove the first row (index 0) which contains the Ticker information
+    cleaned_automated_data = cleaned_automated_data.iloc[1:].copy()
 
-     # Rename the 'Price' column to 'Date'
-     cleaned_automated_data = cleaned_automated_data.rename(columns={'Price': 'Date'})
+    # Rename the 'Price' column to 'Date'
+    cleaned_automated_data = cleaned_automated_data.rename(columns={'Price': 'Date'})
 
-     #Remove duplicate (ticker, date) pairs from the combined file, keep the latest appended row
-     cleaned_automated_data = cleaned_automated_data.drop_duplicates(subset=['Company (Ticker)', 'Date'], keep='last').copy()
+    # Remove duplicate (ticker, date) pairs, keep the latest appended row
+    cleaned_automated_data = cleaned_automated_data.drop_duplicates(subset=['Company (Ticker)', 'Date'], keep='last').copy()
 
-     #save the cleaned data
-     cleaned_automated_data.to_csv("data/Cleaned_companies_daily_data_automated.csv", index=False)
+    # Save the cleaned data to local CSV (optional, but part of original workflow)
+    cleaned_automated_data.to_csv("data/Cleaned_companies_daily_data_automated.csv", index=False)
 
-     # Display the first few rows of the cleaned DataFrame to verify the changes
-     print("Data Shape:", cleaned_automated_data.shape)
-     print(cleaned_automated_data.tail())
-     return cleaned_automated_data
+    # Display the first few rows of the cleaned DataFrame to verify the changes
+    print("Data Shape:", cleaned_automated_data.shape)
+    print(cleaned_automated_data.tail())
 
-    
-#saving to gspreadsheet
-def save_to_gspread(cl_data :pd.DataFrame):
-     """
-       Saving to gspread sheet
-     """
-     df = cl_data.copy()
-     print(df.info())
-     # Ensure 'Date' column is datetime type before formatting
-     # This step is added to address the AttributeError if the column type was lost.
-     df['Date'] = pd.to_datetime(df['Date'], errors='coerce', format='mixed')
+    # --- Data type conversion and NaN/Inf handling for gspread ---
 
-     # Convert 'Date' column to string format for gspread compatibility
-     df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+    # Convert 'Date' column to datetime, then to string.
+    cleaned_automated_data['Date'] = pd.to_datetime(cleaned_automated_data['Date'], errors='coerce', format='mixed')
+    cleaned_automated_data['Date'] = cleaned_automated_data['Date'].dt.strftime('%Y-%m-%d')
 
-     # Process numeric columns: convert to numeric, handle inf/nan.
-     numeric_cols = ['Close', 'High', 'Low', 'Open', 'Volume']
-     for col in numeric_cols:
-        df[col] = pd.to_numeric(df[col], errors='coerce')
+    # Process numeric columns: convert to numeric, handle inf/nan.
+    numeric_cols = ['Close', 'High', 'Low', 'Open', 'Volume']
+    for col in numeric_cols:
+        cleaned_automated_data[col] = pd.to_numeric(cleaned_automated_data[col], errors='coerce')
         # Replace inf and -inf with NaN.
-        df[col] = df[col].replace([np.inf, -np.inf], np.nan)
+        cleaned_automated_data[col] = cleaned_automated_data[col].replace([np.inf, -np.inf], np.nan)
         # For gspread, replace NaN with empty string.
-        df[col] = df[col].fillna('')
+        cleaned_automated_data[col] = cleaned_automated_data[col].fillna('')
 
-     # CRITICAL: Convert ALL data in the DataFrame to string representation
-     # This ensures that no non-JSON-compliant types are passed to gspread.
-     df = df.astype(str)
+    # CRITICAL: Convert ALL data in the DataFrame to string representation
+    # This ensures that no non-JSON-compliant types are passed to gspread.
+    cleaned_automated_data = cleaned_automated_data.astype(str)
 
-     # Convert DataFrame to a list of lists, including headers
-     data_to_upload = [df.columns.values.tolist()] + df.values.tolist()
+    # Convert DataFrame to a list of lists, including headers
+    # Now, all values in cleaned_automated_data should be strings
+    data_to_upload = [cleaned_automated_data.columns.values.tolist()] + cleaned_automated_data.values.tolist()
 
-     # Clear existing content and then update the sheet
-     worksheet.clear()
-     worksheet.update(values=data_to_upload, range_name='A1')
+    # Clear existing content and then update the sheet
+    worksheet.clear()
+    worksheet.update(values=data_to_upload, range_name='A1')
 
-     print("Data successfully uploaded to Google Sheet.")
-    
-    
-cleaned_auto_data = clean_data("data/output_csv_file.csv")
- 
-#run the file command to save the file in google sheet
-save_to_gspread(cleaned_auto_data)
+    print("Data successfully uploaded to Google Sheet.")
+
+# Call the function to execute the process
+process_and_upload_data("data/output_csv_file.csv")
