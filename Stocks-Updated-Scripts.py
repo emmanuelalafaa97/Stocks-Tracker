@@ -24,7 +24,7 @@ SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 SERVICE_ACCOUNT_JSON = os.environ.get("SA_JSON")  # GitHub secret
 
 # Folder ID where CSV should be uploaded
-FOLDER_ID = os.environ.get("DRIVE_FOLDER_ID", "YOUR_FOLDER_ID")
+FOLDER_ID = os.environ.get("DRIVE_FOLDER_ID", "19HTDUml3bn3XUOeZWi09jd9xb0-x6FJ-")
 
 creds_info = json.loads(SERVICE_ACCOUNT_JSON)
 creds = service_account.Credentials.from_service_account_info(creds_info, scopes=SCOPES)
