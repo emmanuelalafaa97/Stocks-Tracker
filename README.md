@@ -5,25 +5,27 @@ This project automatically downloads daily stock price data from Yahoo Finance, 
 The entire workflow runs fully automated using GitHub Actions.
 
 ## Features
-1. Automated Data Collection
+#### 1. Automated Data Collection
+```
+   Fetches daily OHLCV data using yfinance
 
-Fetches daily OHLCV data using yfinance
+   Supports multiple companies across sectors
 
-Supports multiple companies across sectors
+   Adds industry metadata (Sector, Company Name, Ticker)
+```
 
-Adds industry metadata (Sector, Company Name, Ticker)
+#### 2. Data Cleaning Pipeline
+```
+   Converts date formats properly
 
-2. Data Cleaning Pipeline
+   Fixes numeric columns
 
-Converts date formats properly
+   Removes duplicates
 
-Fixes numeric columns
+   Handles NaN/inf values
 
-Removes duplicates
-
-Handles NaN/inf values
-
-Produces a consistent CSV dataset ready for analytics
+   Produces a consistent CSV dataset ready for analytics
+```
 
 3. Automated Upload to Google Drive (as CSV)
 
@@ -38,6 +40,7 @@ Google Drive API
 The uploaded CSV can be connected directly from Tableau using Google Drive connector (no OData needed).
 
 ## Project Structure
+```
 Stocks-Tracker/
 │
 ├── Stocks-Updated-Scripts.py      # Main Python ETL script
@@ -47,6 +50,7 @@ Stocks-Tracker/
 │
 └── credentials/
     └── (OAuth JSON stored securely in GitHub Secrets)
+```
 
 ## How It Works
 1. GitHub Action triggers daily
