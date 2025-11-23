@@ -240,7 +240,7 @@ def process_and_upload_data(csv_path: str):
     csv_file = "automated_cleaned_companies_daily_data_.csv"
     cleaned_automated_data.to_csv(csv_file, index=False)
 
-    folder_id = "19HTDUml3bn3XUOeZWi09jd9xb0-x6FJ-"
+    folder_id = "19HTDUml3bn3XUOeZWi09jd9xb0-x6FJ"
     file_metadata = {
        "name": csv_file,
        "parents": [folder_id]  # this saves it inside the folder
