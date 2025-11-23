@@ -1,6 +1,34 @@
-import yfinance as yf
+# -*- coding: utf-8 -*-
+
+
+import gspread      #note gspread  and the google.oauth2.service account to get credentials
 import pandas as pd
+from google.oauth2.service_account import Credentials
+import csv
+import yfinance as yf
 import os
+from pathlib import Path
+import sys
+import numpy as np
+import traceback
+
+
+
+
+SCOPES = [
+"https://www.googleapis.com/auth/spreadsheets",
+"https://www.googleapis.com/auth/drive"
+]
+creds = Credentials.from_service_account_file(
+             sys.argv[1], scopes=SCOPES
+)
+client = gspread.authorize(creds)
+sheet = client.open("Cleaned_companies_daily_data_automated")
+worksheet = sheet.sheet1
+
+
+"""### First script"""
+
 
 # Define the dictionary of companies and their sectors
 company_sector = {
@@ -66,7 +94,17 @@ company_sector = {
 }
 
 # Define the output CSV file path
-output_csv_file = 'companies_daily_data_automated_first_script.csv'
+output_csv_file = 'data/companies_daily_data_automated_first_script.csv'
+if not os.path.exists(output_csv_file):
+  try:
+    # Use 'x' mode: exclusive creation mode. Fails if the file exists.
+    with open(output_csv_file, 'x') as f:
+        print(f"File '{output_csv_file}' created successfully.")
+  except FileExistsError:
+    print(f"File '{output_csv_file}' already exists.")
+  except FileNotFoundError:
+    # This might occur if the directory path itself doesn't exist
+    print(f"Error: Directory not found for '{output_csv_file}'")
 
 # Get the latest date from the existing CSV if it exists
 latest_date = None
@@ -118,12 +156,15 @@ def download_and_append_data(ticker, start_date=None):
             data['Company name'] = company_names.get(ticker, 'Unknown')
 
             # Append data to the CSV
-            data.to_csv("/content/drive/MyDrive/Stocks Project folder/output_csv_file",  mode='a', header=not os.path.exists("/content/drive/MyDrive/Stocks Project folder/output_csv_file"))
+            output_path = "data/output_csv_file"
+
+            data.to_csv("data/output_csv_file.csv",  mode='a', header=not os.path.exists("data/output_csv_file"))
             print(f"Successfully downloaded and appended data for {ticker}")
         else:
             print(f"No new data found for {ticker} with start date {start_date}")
     except Exception as e:
         print(f"Error downloading data for {ticker}: {e}")
+    return data
 
 # Determine the start date for downloading
 download_start_date = None
@@ -137,3 +178,70 @@ for ticker in company_sector.keys():
     download_and_append_data(ticker, start_date=download_start_date)
 
 print("\nAutomation script finished.")
+
+#check the data shape
+automated_data_test = pd.read_csv("data/output_csv_file.csv")
+print(automated_data_test.shape)
+
+### Clean the data
+def process_and_upload_data(csv_path: str):
+  try :
+    # Create a copy of the DataFrame to avoid modifying the original
+    cleaned_automated_data = pd.read_csv(csv_path)
+
+    # Remove the first row (index 0) which contains the Ticker information
+    cleaned_automated_data = cleaned_automated_data.iloc[1:].copy()
+
+    # Rename the 'Price' column to 'Date'
+    cleaned_automated_data = cleaned_automated_data.rename(columns={'Price': 'Date'})
+
+    # Remove duplicate (ticker, date) pairs, keep the latest appended row
+    cleaned_automated_data = cleaned_automated_data.drop_duplicates(subset=['Company (Ticker)', 'Date'], keep='last').copy()
+
+    # Save the cleaned data to local CSV (optional, but part of original workflow)
+    cleaned_automated_data.to_csv("data/Cleaned_companies_daily_data_automated.csv", index=False)
+
+    # Display the first few rows of the cleaned DataFrame to verify the changes
+    print("Data Shape:", cleaned_automated_data.shape)
+    print(cleaned_automated_data.tail())
+
+    # --- Data type conversion and NaN/Inf handling for gspread ---
+
+    # Convert 'Date' column to datetime, then to string.
+    cleaned_automated_data['Date'] = pd.to_datetime(cleaned_automated_data['Date'], errors='coerce', format='mixed')
+    cleaned_automated_data['Date'] = cleaned_automated_data['Date'].dt.strftime('%Y-%m-%d')
+
+    print("changed date type:", cleaned_automated_data.shape)
+    print(cleaned_automated_data.info())
+    # Process numeric columns: convert to numeric, handle inf/nan.
+    numeric_cols = ['Close', 'High', 'Low', 'Open', 'Volume']
+    for col in numeric_cols:
+        try:
+          cleaned_automated_data[col] = pd.to_numeric(cleaned_automated_data[col], errors='coerce')
+          # Replace inf and -inf with NaN.
+          cleaned_automated_data[col] = cleaned_automated_data[col].replace([np.inf, -np.inf], np.nan)
+          # For gspread, replace NaN with empty string.
+          cleaned_automated_data[col] = cleaned_automated_data[col].fillna('')
+        except Exception as e:
+          print(f"\nERROR during processing of column '{col}': {e}")
+          print("Traceback:", traceback.format_exc())
+
+    # Convert ALL data in the DataFrame to string representation
+    # This ensures that no non-JSON-compliant types are passed to gspread.
+    cleaned_automated_data = cleaned_automated_data.astype(str)
+
+    # Convert DataFrame to a list of lists, including headers
+    # Now, all values in cleaned_automated_data should be strings
+    data_to_upload = [cleaned_automated_data.columns.values.tolist()] + cleaned_automated_data.values.tolist()
+
+    # Clear existing content and then update the sheet
+    worksheet.clear()
+    worksheet.update(values=data_to_upload, range_name='A1')
+
+    print("Data successfully uploaded to Google Sheet.")
+  except Exception as e:
+    print(f"\nERROR during initial data loading or cleaning steps: {e}")
+    print("Traceback:", traceback.format_exc())
+
+# Call the function to execute the process
+process_and_upload_data("data/output_csv_file.csv")
