@@ -4,6 +4,9 @@
 import gspread      #note gspread  and the google.oauth2.service account to get credentials
 import pandas as pd
 from google.oauth2.service_account import Credentials
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 import csv
 import yfinance as yf
 import os
@@ -22,9 +25,11 @@ SCOPES = [
 creds = Credentials.from_service_account_file(
              sys.argv[1], scopes=SCOPES
 )
-client = gspread.authorize(creds)
-sheet = client.open("Cleaned_companies_daily_data_automated")
-worksheet = sheet.sheet1
+
+drive_service = build('drive', 'v3', credentials=creds)
+#client = gspread.authorize(creds)
+#sheet = client.open("Cleaned_companies_daily_data_automated")
+#worksheet = sheet.sheet1
 
 
 """### First script"""
@@ -232,7 +237,22 @@ def process_and_upload_data(csv_path: str):
     cleaned_automated_data = cleaned_automated_data.where(cleaned_automated_data.notna(), '')
 
     #save again
-    cleaned_automated_data.to_csv("Cleaned_companies_daily_data_automated.csv", index=False)
+    csv_file = "automated_cleaned_companies_daily_data_.csv"
+    cleaned_automated_data.to_csv(csv_file, index=False)
+
+    folder_id = "19HTDUml3bn3XUOeZWi09jd9xb0-x6FJ-"
+    file_metadata = {
+       "name": csv_file,
+       "parents": [folder_id]  # this saves it inside the folder
+     }
+    media = MediaFileUpload(csv_file, mimetype="text/csv")
+    file = drive_service.files().create(
+         body=file_metadata,
+         media_body=media,
+         fields="id"
+     ).execute()
+
+    print(f"Uploaded CSV to Drive with file ID: {file['id']}")    
 
     # Convert DataFrame to a list of lists, including headers
     # Now, all values in cleaned_automated_data should be strings
@@ -241,16 +261,16 @@ def process_and_upload_data(csv_path: str):
 
 
     #Trying  to save in csv so that it opens as csv in googlesheet
-    with open("Cleaned_companies_daily_data_automated.csv", "r") as f:
-      reader = list(csv.reader(f))
+    #with open("Cleaned_companies_daily_data_automated.csv", "r") as f:
+      #reader = list(csv.reader(f))
 
     # Clear existing content and then update the sheet
-    worksheet.clear()
+    #worksheet.clear()
     #worksheet.update(values=data_to_upload, range_name='A1')
     #worksheet.update(data_to_upload, value_input_option='USER_ENTERED')
-    worksheet.update(reader, value_input_option="USER_ENTERED")
+    #worksheet.update(reader, value_input_option="USER_ENTERED")
 
-    print("Data successfully uploaded to Google Sheet.")
+    #print("Data successfully uploaded to Google Sheet.")
   except Exception as e:
     print(f"\nERROR during initial data loading or cleaning steps: {e}")
     print("Traceback:", traceback.format_exc())
