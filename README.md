@@ -27,7 +27,7 @@ The entire workflow runs fully automated using GitHub Actions.
    Produces a consistent CSV dataset ready for analytics
 ```
 
-3. Automated Upload to Google Drive (as CSV)
+#### 3. Automated Upload to Google Drive (as CSV)
 
 Because Google Sheets is not ideal for Tableau (OData required), the workflow uploads the cleaned CSV file directly to Google Drive, using:
 
@@ -53,7 +53,7 @@ Stocks-Tracker/
 ```
 
 ## How It Works
-1. GitHub Action triggers daily
+#### 1. GitHub Action triggers daily
 
 Every day at a set time, GitHub Actions runs:
 
@@ -61,7 +61,7 @@ on:
   schedule:
     - cron: "0 6 * * *"   # Runs daily
 
-2. Script fetches and processes stock data
+#### 2. Script fetches and processes stock data
 
 Downloads stock history
 
@@ -69,15 +69,16 @@ Merges company metadata
 
 Cleans and standardizes data
 
-3. CSV file is generated
+#### 3. CSV file is generated
+```
+   Example output:
 
-Example output:
+   Cleaned_companies_daily_data_automated.csv
+```
 
-Cleaned_companies_daily_data_automated.csv
+#### 4. CSV is uploaded to Google Drive
 
-4. CSV is uploaded to Google Drive
-
-Your GitHub workflow uses OAuth credentials to upload:
+GitHub workflow uses OAuth credentials to upload:
 
 file_metadata = {
   "name": csv_file,
