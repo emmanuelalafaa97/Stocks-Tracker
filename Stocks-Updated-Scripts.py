@@ -228,7 +228,8 @@ def process_and_upload_data(csv_path: str):
 
     # Convert ALL data in the DataFrame to string representation
     # This ensures that no non-JSON-compliant types are passed to gspread.
-    cleaned_automated_data = cleaned_automated_data.astype(str)
+    #cleaned_automated_data = cleaned_automated_data.astype(str)
+    cleaned_automated_data = cleaned_automated_data.where(cleaned_automated_data.notna(), '')
 
     # Convert DataFrame to a list of lists, including headers
     # Now, all values in cleaned_automated_data should be strings
@@ -236,7 +237,8 @@ def process_and_upload_data(csv_path: str):
 
     # Clear existing content and then update the sheet
     worksheet.clear()
-    worksheet.update(values=data_to_upload, range_name='A1')
+    #worksheet.update(values=data_to_upload, range_name='A1')
+    worksheet.update(data_to_upload, value_input_option='USER_ENTERED')
 
     print("Data successfully uploaded to Google Sheet.")
   except Exception as e:
