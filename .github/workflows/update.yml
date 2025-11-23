@@ -28,12 +28,9 @@ jobs:
         run: |
           pip install -r requirements.txt
           
-      - name: Save OAuth JSON
+      - name: Run sheet update
         env:
           OAUTH_JSON: ${{ secrets.OAUTH_JSON }}
         run: |
           echo "$OAUTH_JSON" > client_secret.json
-
-      - name: Run sheet update
-        run: |
           python Stocks-Updated-Scripts.py
