@@ -27,12 +27,13 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          
+      - name: Save OAuth JSON
+        env:
+          OAUTH_JSON: ${{ secrets.OAUTH_JSON }}
+        run: |
+          echo "$OAUTH_JSON" > client_secret.json
 
       - name: Run sheet update
-        env:
-          SA_KEY_JSON: ${{ secrets.SA_KEY_JSON }}
-          TARGET_SHEET_ID: ${{ secrets.TARGET_SHEET_ID }} 
-          SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SHEETS_CRED }}
         run: |
-          echo "$SA_KEY_JSON" > cred.json
           python Stocks-Updated-Scripts.py cred.json
