@@ -234,11 +234,19 @@ def process_and_upload_data(csv_path: str):
     # Convert DataFrame to a list of lists, including headers
     # Now, all values in cleaned_automated_data should be strings
     data_to_upload = [cleaned_automated_data.columns.values.tolist()] + cleaned_automated_data.values.tolist()
+    data_to_upload.to_csv("Cleaned_companies_daily_data_automated.csv", index=False)
+    
+
+
+    #Trying  to save in csv so that it opens as csv in googlesheet
+    with open("Cleaned_companies_daily_data_automated.csv", "r") as f:
+      reader = list(csv.reader(f))
 
     # Clear existing content and then update the sheet
     worksheet.clear()
     #worksheet.update(values=data_to_upload, range_name='A1')
-    worksheet.update(data_to_upload, value_input_option='USER_ENTERED')
+    #worksheet.update(data_to_upload, value_input_option='USER_ENTERED')
+    worksheet.update(reader, value_input_option="USER_ENTERED")
 
     print("Data successfully uploaded to Google Sheet.")
   except Exception as e:
