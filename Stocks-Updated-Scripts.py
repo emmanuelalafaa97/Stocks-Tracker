@@ -254,6 +254,7 @@ def process_and_upload_data(csv_path: str):
     file = drive_service.files().create(
          body=file_metadata,
          media_body=media,
+         supportsAllDrives=True,
          fields="id"
      ).execute()
 
