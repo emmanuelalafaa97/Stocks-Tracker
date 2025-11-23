@@ -263,7 +263,7 @@ def process_and_upload_data(csv_path: str):
 
     # Convert DataFrame to a list of lists, including headers
     # Now, all values in cleaned_automated_data should be strings
-    data_to_upload = [cleaned_automated_data.columns.values.tolist()] + cleaned_automated_data.values.tolist()
+    #data_to_upload = [cleaned_automated_data.columns.values.tolist()] + cleaned_automated_data.values.tolist()
         
 
 
