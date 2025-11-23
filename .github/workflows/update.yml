@@ -36,4 +36,4 @@ jobs:
 
       - name: Run sheet update
         run: |
-          python Stocks-Updated-Scripts.py cred.json
+          python Stocks-Updated-Scripts.py
