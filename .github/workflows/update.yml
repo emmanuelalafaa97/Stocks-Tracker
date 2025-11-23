@@ -30,7 +30,7 @@ jobs:
           
       - name: Run sheet update
         env:
-          OAUTH_JSON: ${{ secrets.OAUTH_JSON }}
+          SA_JSON: ${{ secrets.SA_KEY_JSON }}        # service account JSON
+          DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}  # optional, folder ID
         run: |
-          echo "$OAUTH_JSON" > client_secret.json
           python Stocks-Updated-Scripts.py
