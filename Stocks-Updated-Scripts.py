@@ -21,16 +21,13 @@ import traceback
 # Google Drive OAuth setup
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
-with open("client_secret.json", "w") as f:
-    f.write(os.environ["OAUTH_JSON"])  
+SERVICE_ACCOUNT_JSON = os.environ.get("SA_JSON")  # GitHub secret
 
-flow = InstalledAppFlow.from_client_secrets_file("client_secret.json", SCOPES)
-creds = flow.run_local_server(port=0)  # Run locally once to generate token
+# Folder ID where CSV should be uploaded
+FOLDER_ID = os.environ.get("DRIVE_FOLDER_ID", "YOUR_FOLDER_ID")
 
-# Save token.json for reuse (optional)
-import pickle
-with open("token.pkl", "wb") as token_file:
-    pickle.dump(creds, token_file)
+creds_info = json.loads(SERVICE_ACCOUNT_JSON)
+creds = service_account.Credentials.from_service_account_info(creds_info, scopes=SCOPES)
 
 # Build Drive service
 drive_service = build('drive', 'v3', credentials=creds)
