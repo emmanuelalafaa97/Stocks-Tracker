@@ -17,16 +17,23 @@ import traceback
 
 
 
+# Google Drive OAuth setup
+SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
-SCOPES = [
-"https://www.googleapis.com/auth/spreadsheets",
-"https://www.googleapis.com/auth/drive"
-]
-creds = Credentials.from_service_account_file(
-             sys.argv[1], scopes=SCOPES
-)
+with open("client_secret.json", "w") as f:
+    f.write(os.environ["OAUTH_JSON"])  
 
+flow = InstalledAppFlow.from_client_secrets_file("client_secret.json", SCOPES)
+creds = flow.run_local_server(port=0)  # Run locally once to generate token
+
+# Save token.json for reuse (optional)
+import pickle
+with open("token.pkl", "wb") as token_file:
+    pickle.dump(creds, token_file)
+
+# Build Drive service
 drive_service = build('drive', 'v3', credentials=creds)
+
 #client = gspread.authorize(creds)
 #sheet = client.open("Cleaned_companies_daily_data_automated")
 #worksheet = sheet.sheet1
